@@ -206,5 +206,6 @@ func unmarshal(msg []byte) {
 	if err != nil {
 		fmt.Println("Error Executing Command %q", err)
 	}
+
 	fmt.Printf("Job executed. Output: %q\n", out)
 }
