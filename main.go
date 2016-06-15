@@ -1,7 +1,3 @@
-// This example declares a durable Exchange, an ephemeral (auto-delete) Queue,
-// binds the Queue to the Exchange with a binding key, and consumes every
-// message published to that Exchange with that routing key.
-//
 package main
 
 import (
@@ -9,10 +5,27 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os/exec"
+	"path"
 	"time"
 
 	"github.com/streadway/amqp"
 )
+
+type jsonDockerhub struct {
+	Repository RepositoryType `json:"repository"`
+	PushData   PushDataType   `json:"push_data"`
+}
+
+type RepositoryType struct {
+	RepoName string `json:"repo_name"`
+}
+
+type PushDataType struct {
+	Tag    string `json:"tag"`
+	Pusher string `json:"pusher"`
+	// Images []string `json:"images"`
+}
 
 var (
 	uri          = flag.String("uri", "amqp://guest:guest@localhost:5672/", "AMQP URI")
@@ -22,6 +35,7 @@ var (
 	bindingKey   = flag.String("key", "test-key", "AMQP binding key")
 	consumerTag  = flag.String("consumer-tag", "simple-consumer", "AMQP consumer tag (should not be blank)")
 	lifetime     = flag.Duration("lifetime", 5*time.Second, "lifetime of process before shutdown (0s=infinite)")
+	jobsPath     = flag.String("jobs-path", "/usr/local/opt/rabbithook", "Path to RabbitHook jobs")
 )
 
 func init() {
@@ -159,13 +173,10 @@ func (c *Consumer) Shutdown() error {
 func handle(deliveries <-chan amqp.Delivery, done chan error) {
 	for d := range deliveries {
 		log.Printf(
-			"got %dB delivery: [%v], key: (%q), ContentType %q ContentEncoding %q Type %q\n%q",
+			"got %dB delivery: [%v], key: (%q), \n%q",
 			len(d.Body),
 			d.DeliveryTag,
 			d.RoutingKey,
-			d.ContentType,
-			d.ContentEncoding,
-			d.Type,
 			d.Body,
 		)
 
@@ -178,37 +189,22 @@ func handle(deliveries <-chan amqp.Delivery, done chan error) {
 }
 
 func unmarshal(msg []byte) {
-	mp := make(map[string]interface{})
+	var payload jsonDockerhub
 
-	err := json.Unmarshal(msg, &mp)
+	err := json.Unmarshal(msg, &payload)
 
 	if err != nil {
 		println(err)
 		return
 	}
 
-	fmt.Printf("mp is now: %+v\n", mp)
+	fmt.Printf("Updated repo: %q, Tag: %q", payload.Repository.RepoName, payload.PushData.Tag)
 
-	repository := mp["repository"]
-	repoName := repository["repo_name"]
-	fmt.Println("repo_name:", repoName)
+	cmdPath := path.Join(*jobsPath, payload.Repository.RepoName)
 
-	// for key, value := range mp {
-	// 	fmt.Println("key: ", key, "value:", value)
-	// }
-}
-
-type jsonDockerhub struct {
-	Repository RepositoryType `json:"repository"`
-	PushData   PushDataType   `json:"push_data"`
-}
-
-type RepositoryType struct {
-	RepoName string `json:"repo_name"`
-}
-
-type PushDataType struct {
-	Tag    string `json:"tag"`
-	Pusher string `json:"pusher"`
-	// Images []string `json:"images"`
+	out, err := exec.Command(cmdPath).Output()
+	if err != nil {
+		fmt.Println("Error Executing Command %q", err)
+	}
+	fmt.Printf("Job executed. Output: %q\n", out)
 }
