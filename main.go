@@ -180,7 +180,7 @@ func handle(deliveries <-chan amqp.Delivery, done chan error) {
 			d.Body,
 		)
 
-		unmarshal(d.Body)
+		processUpdate(d.Body)
 
 		d.Ack(false)
 	}
@@ -188,7 +188,7 @@ func handle(deliveries <-chan amqp.Delivery, done chan error) {
 	done <- nil
 }
 
-func unmarshal(msg []byte) {
+func processUpdate(msg []byte) {
 	var payload jsonDockerhub
 
 	err := json.Unmarshal(msg, &payload)
