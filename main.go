@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"path"
 	"time"
@@ -198,14 +199,30 @@ func processUpdate(msg []byte) {
 		return
 	}
 
-	fmt.Printf("Updated repo: %q, Tag: %q", payload.Repository.RepoName, payload.PushData.Tag)
+	if len(payload.Repository.RepoName) == 0 {
+		fmt.Printf("=> %q", payload)
+		return
+	}
+	data := payload.PushData
+	repo := payload.Repository
 
-	cmdPath := path.Join(*jobsPath, payload.Repository.RepoName)
+	fmt.Printf("Updated repo: %q, Tag: %q\n", repo.RepoName, data.Tag)
 
-	out, err := exec.Command(cmdPath).Output()
-	if err != nil {
-		fmt.Println("Error Executing Command %q", err)
+	cmdPath := path.Join(*jobsPath, repo.RepoName)
+
+	fmt.Print("Built CMD: %q\n", cmdPath)
+
+	if _, err := os.Stat(cmdPath); err == nil {
+
+		out, err := exec.Command(cmdPath, "--id", repo.RepoName, "--tag", data.Tag).Output()
+
+		if err != nil {
+			fmt.Println("Error Executing Command %q", err)
+		}
+
+		fmt.Printf("Job executed. Output: %q\n", out)
+	} else {
+		fmt.Println("Skeeping Job. File not found.")
 	}
 
-	fmt.Printf("Job executed. Output: %q\n", out)
 }
