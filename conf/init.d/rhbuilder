@@ -15,7 +15,7 @@
 case "$1" in
     start)
         echo "Starting rhbuilder"
-        /usr/local/opt/rhbuilder-launcher
+        /usr/local/opt/rhbuilder/launcher
         ;;
     stop)
         echo "Stopping rhbuilder"
