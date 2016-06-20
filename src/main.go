@@ -36,7 +36,7 @@ var (
 	bindingKey   = flag.String("key", "test-key", "AMQP binding key")
 	consumerTag  = flag.String("consumer-tag", "simple-consumer", "AMQP consumer tag (should not be blank)")
 	lifetime     = flag.Duration("lifetime", 5*time.Second, "lifetime of process before shutdown (0s=infinite)")
-	jobsPath     = flag.String("jobs-path", "/usr/local/opt/rabbithook", "Path to RabbitHook jobs")
+	jobsPath     = flag.String("jobs-path", "/usr/local/opt/rhbuilder", "Path to RabbitHook jobs")
 )
 
 func init() {
