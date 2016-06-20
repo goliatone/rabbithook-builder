@@ -11,13 +11,13 @@ cd /usr/local/opt/rhbuilder
 wget https://raw.githubusercontent.com/goliatone/rabbithook-builder/master/conf/init.d/rhbuilder-launcher -O launcher
 
 cd /usr/local/bin/
-wget https://raw.githubusercontent.com/goliatone/rabbithook-builder/master/bin/$ARCH/rhbuilder
+wget -N https://raw.githubusercontent.com/goliatone/rabbithook-builder/master/bin/$ARCH/rhbuilder
 
 
 echo "cd into init.d"
 cd /etc/init.d
 echo "Downloading rhbuilder init.d job"
-wget https://raw.githubusercontent.com/goliatone/rabbithook-builder/master/conf/init.d/rhbuilder
+wget -N https://raw.githubusercontent.com/goliatone/rabbithook-builder/master/conf/init.d/rhbuilder
 
 echo "Set permissions for rhbuilder"
 chmod 755 /etc/init.d/rhbuilder
