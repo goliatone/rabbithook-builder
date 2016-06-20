@@ -3,20 +3,20 @@
 # call with platform: sudo ./install arm|ubuntu|mac
 
 mkdir -p /usr/local/opt/rhbuilder
-wget https://raw.githubusercontent.com/goliatone/rabbit-builder/master/conf/init.d/rhbuilder.tpl -O .rhbuilder
+wget https://raw.githubusercontent.com/goliatone/rabbithook-builder/master/conf/init.d/rhbuilder.tpl -O .rhbuilder
 sudo chmod 755 /usr/local/opt/rhbuilder/.rhbuilder
 
 cd /usr/local/opt
-wget https://raw.githubusercontent.com/goliatone/rabbit-builder/master/conf/init.d/rhbuilder-launcher
+wget https://raw.githubusercontent.com/goliatone/rabbithook-builder/master/conf/init.d/rhbuilder-launcher
 
 cd /usr/local/bin/
-wget https://raw.githubusercontent.com/goliatone/rabbit-builder/master/bin/$1/rhbuilder
+wget https://raw.githubusercontent.com/goliatone/rabbithook-builder/master/bin/$1/rhbuilder
 
 
 echo "cd into init.d"
 cd /etc/init.d
 echo "Downloading rhbuilder init.d job"
-wget https://raw.githubusercontent.com/goliatone/rabbit-builder/master/conf/init.d/rhbuilder
+wget https://raw.githubusercontent.com/goliatone/rabbithook-builder/master/conf/init.d/rhbuilder
 
 echo "Set permissions for rhbuilder"
 sudo chmod 755 /etc/init.d/rhbuilder
