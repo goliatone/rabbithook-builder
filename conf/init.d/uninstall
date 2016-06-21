@@ -1,0 +1,17 @@
+#!/bin/bash
+
+echo "Stopping rhbuilder service..."
+sudo /etc/init.d/rhbuilder stop
+
+echo "Removing rhbuilder from update-rc.d..."
+sudo update-rc.d rhbuilder remove
+
+# echo "Removing rhbuilder configuration..."
+#rm /etc/default/rhbuilder
+
+
+echo "Removing rhbuilder binary from /usr/local/bin/..."
+rm /usr/local/bin/rhbuilder
+
+echo "Removing rhbuilder from init.d..."
+rm /etc/init.d/rhbuilder
