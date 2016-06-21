@@ -1,0 +1,15 @@
+#!/bin/sh
+# call with platform: sudo ./install arm|ubuntu|mac
+
+cd /opt
+
+wget https://raw.githubusercontent.com/goliatone/rabbit-builder/master/bin/$1/rhbuilder
+wget https://raw.githubusercontent.com/goliatone/rabbit-builder/master/conf/upstart/rhbuilder.conf
+wget https://raw.githubusercontent.com/goliatone/rabbit-builder/master/conf/upstart/rhbuilder.log
+
+chmod +x /opt/rhbuilder
+
+cp /opt/rhbuilder.conf /etc/init/rhbuilder.conf
+cp /opt/rhbuilder.log /etc/logrotate.d/rhbuilder
+
+initctl start rhbuilder
