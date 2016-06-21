@@ -12,6 +12,7 @@ mkdir -p /usr/local/opt/rhbuilder
 
 cd /usr/local/bin/
 wget -N https://raw.githubusercontent.com/goliatone/rabbithook-builder/master/bin/$ARCH/rhbuilder
+chmod 755 /usr/local/bin/rhbuilder
 
 echo "cd into init.d"
 cd /etc/init.d
