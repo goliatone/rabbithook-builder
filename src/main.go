@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -37,30 +38,57 @@ var (
 	consumerTag  = flag.String("consumer-tag", "simple-consumer", "AMQP consumer tag (should not be blank)")
 	lifetime     = flag.Duration("lifetime", 5*time.Second, "lifetime of process before shutdown (0s=infinite)")
 	jobsPath     = flag.String("jobs-path", "/usr/local/opt/rhbuilder", "Path to RabbitHook jobs")
+	logPath      = flag.String("log-path", "/var/log/rhbuilder.log", "Path to log file")
 )
+
+var Info *log.Logger
+var Error *log.Logger
+var logFile os.File
 
 func init() {
 	flag.Parse()
 }
 
+func createLogger() {
+	logFile, openErr1 := os.OpenFile(*logPath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
+	multi := io.MultiWriter(logFile, os.Stdout)
+
+	if openErr1 != nil {
+		log.Println("Uh oh! Could not open log file.")
+		log.Printf("Ensure there is a file at %q", *logPath)
+	}
+
+	Info = log.New(multi,
+		"INFO: ",
+		log.Ldate|log.Ltime|log.Lshortfile)
+
+	Error = log.New(multi,
+		"ERROR: ",
+		log.Ldate|log.Ltime|log.Lshortfile)
+}
+
 func main() {
+
+	createLogger()
+	defer logFile.Close()
+
 	c, err := NewConsumer(*uri, *exchange, *exchangeType, *queue, *bindingKey, *consumerTag)
 	if err != nil {
-		log.Fatalf("%s", err)
+		Error.Fatalf("%s", err)
 	}
 
 	if *lifetime > 0 {
-		log.Printf("running for %s", *lifetime)
+		Info.Printf("running for %s", *lifetime)
 		time.Sleep(*lifetime)
 	} else {
-		log.Printf("running forever")
+		Info.Printf("running forever")
 		select {}
 	}
 
-	log.Printf("shutting down")
+	Info.Printf("shutting down")
 
 	if err := c.Shutdown(); err != nil {
-		log.Fatalf("error during shutdown: %s", err)
+		Error.Fatalf("error during shutdown: %s", err)
 	}
 }
 
@@ -81,7 +109,7 @@ func NewConsumer(amqpURI, exchange, exchangeType, queueName, key, ctag string) (
 
 	var err error
 
-	log.Printf("dialing %q", amqpURI)
+	Info.Printf("dialing %q", amqpURI)
 	c.conn, err = amqp.Dial(amqpURI)
 	if err != nil {
 		return nil, fmt.Errorf("Dial: %s", err)
@@ -91,13 +119,15 @@ func NewConsumer(amqpURI, exchange, exchangeType, queueName, key, ctag string) (
 		fmt.Printf("closing: %s", <-c.conn.NotifyClose(make(chan *amqp.Error)))
 	}()
 
-	log.Printf("got Connection, getting Channel")
+	Info.Printf("got Connection, getting Channel")
+
 	c.channel, err = c.conn.Channel()
 	if err != nil {
 		return nil, fmt.Errorf("Channel: %s", err)
 	}
 
-	log.Printf("got Channel, declaring Exchange (%q)", exchange)
+	Info.Printf("got Channel, declaring Exchange (%q)", exchange)
+
 	if err = c.channel.ExchangeDeclare(
 		exchange,     // name of the exchange
 		exchangeType, // type
@@ -110,7 +140,7 @@ func NewConsumer(amqpURI, exchange, exchangeType, queueName, key, ctag string) (
 		return nil, fmt.Errorf("Exchange Declare: %s", err)
 	}
 
-	log.Printf("declared Exchange, declaring Queue %q", queueName)
+	Info.Printf("declared Exchange, declaring Queue %q", queueName)
 	queue, err := c.channel.QueueDeclare(
 		queueName, // name of the queue
 		false,     // durable CHANGED from true
@@ -123,7 +153,7 @@ func NewConsumer(amqpURI, exchange, exchangeType, queueName, key, ctag string) (
 		return nil, fmt.Errorf("Queue Declare: %s", err)
 	}
 
-	log.Printf("declared Queue (%q %d messages, %d consumers), binding to Exchange (key %q)",
+	Info.Printf("declared Queue (%q %d messages, %d consumers), binding to Exchange (key %q)",
 		queue.Name, queue.Messages, queue.Consumers, key)
 
 	if err = c.channel.QueueBind(
@@ -136,7 +166,8 @@ func NewConsumer(amqpURI, exchange, exchangeType, queueName, key, ctag string) (
 		return nil, fmt.Errorf("Queue Bind: %s", err)
 	}
 
-	log.Printf("Queue bound to Exchange, starting Consume (consumer tag %q)", c.tag)
+	Info.Printf("Queue bound to Exchange, starting Consume (consumer tag %q)", c.tag)
+
 	deliveries, err := c.channel.Consume(
 		queue.Name, // name
 		c.tag,      // consumerTag,
@@ -165,7 +196,7 @@ func (c *Consumer) Shutdown() error {
 		return fmt.Errorf("AMQP connection close error: %s", err)
 	}
 
-	defer log.Printf("AMQP shutdown OK")
+	defer Info.Printf("AMQP shutdown OK")
 
 	// wait for handle() to exit
 	return <-c.done
@@ -173,7 +204,7 @@ func (c *Consumer) Shutdown() error {
 
 func handle(deliveries <-chan amqp.Delivery, done chan error) {
 	for d := range deliveries {
-		log.Printf(
+		Info.Printf(
 			"got %dB delivery: [%v], key: (%q), \n%q",
 			len(d.Body),
 			d.DeliveryTag,
@@ -185,7 +216,7 @@ func handle(deliveries <-chan amqp.Delivery, done chan error) {
 
 		d.Ack(false)
 	}
-	log.Printf("handle: deliveries channel closed")
+	Info.Printf("handle: deliveries channel closed")
 	done <- nil
 }
 
@@ -195,34 +226,32 @@ func processUpdate(msg []byte) {
 	err := json.Unmarshal(msg, &payload)
 
 	if err != nil {
-		println(err)
-		return
+		Error.Fatalf("%s", err)
 	}
 
 	if len(payload.Repository.RepoName) == 0 {
-		fmt.Printf("=> %q", payload)
+		Info.Printf("=> %q", payload)
 		return
 	}
 	data := payload.PushData
 	repo := payload.Repository
 
-	fmt.Printf("Updated repo: %q, Tag: %q\n", repo.RepoName, data.Tag)
+	Info.Printf("Updated repo: %q, Tag: %q\n", repo.RepoName, data.Tag)
 
 	cmdPath := path.Join(*jobsPath, repo.RepoName)
 
-	fmt.Print("Built CMD: %q\n", cmdPath)
+	Info.Print("Built CMD: %q\n", cmdPath)
 
 	if _, err := os.Stat(cmdPath); err == nil {
 
 		out, err := exec.Command(cmdPath, "--id", repo.RepoName, "--tag", data.Tag).Output()
 
 		if err != nil {
-			fmt.Println("Error Executing Command %q", err)
+			Info.Println("Error Executing Command %q", err)
 		}
 
-		fmt.Printf("Job executed. Output: %q\n", out)
+		Info.Printf("Job executed. Output: %q\n", out)
 	} else {
-		fmt.Println("Skeeping Job. File not found.")
+		Info.Println("Skeeping Job. File not found.")
 	}
-
 }
