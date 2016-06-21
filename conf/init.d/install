@@ -3,16 +3,12 @@
 # call with platform: sudo ./install arm|ubuntu|mac
 ARCH=${1:-arm}
 
-mkdir -p /usr/local/opt/rhbuilder && cd /usr/local/opt/rhbuilder
-
-if [ ! -f /usr/local/opt/rhbuilder/.rhbuilder ]; then
-    wget https://raw.githubusercontent.com/goliatone/rabbithook-builder/master/conf/init.d/rhbuilder.tpl -O .rhbuilder
-    chmod 755 /usr/local/opt/rhbuilder/.rhbuilder
+if [ ! -f /etc/default/rhbuilder ]; then
+    wget https://raw.githubusercontent.com/goliatone/rabbithook-builder/master/conf/init.d/rhbuilder.tpl -O /etc/default/rhbuilder
+    chmod 755 /etc/default/rhbuilder
 fi
 
-cd /usr/local/opt/rhbuilder
-wget https://raw.githubusercontent.com/goliatone/rabbithook-builder/master/conf/init.d/rhbuilder-launcher -O launcher
-chmod 755 /usr/local/opt/rhbuilder/launcher
+mkdir -p /usr/local/opt/rhbuilder
 
 cd /usr/local/bin/
 wget -N https://raw.githubusercontent.com/goliatone/rabbithook-builder/master/bin/$ARCH/rhbuilder
@@ -29,7 +25,7 @@ echo "Registering service with update-rc.d"
 sudo update-rc.d rhbuilder defaults
 
 echo "Remember to update your configuration file:"
-echo "/usr/local/opt/rhbuilder/.rhbuilder"
+echo "/etc/default/rhbuilder"
 echo ""
 echo "Once you have done that, you can start the job:"
 echo "# sudo /etc/init.d/rhbuilder start"
