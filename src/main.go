@@ -43,19 +43,23 @@ var (
 
 var Info *log.Logger
 var Error *log.Logger
-var logFile os.File
 
 func init() {
 	flag.Parse()
 }
 
-func createLogger() {
-	logFile, openErr1 := os.OpenFile(*logPath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
-	multi := io.MultiWriter(logFile, os.Stdout)
+func createLogger() *os.File {
+	logFile, err := os.OpenFile(*logPath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
 
-	if openErr1 != nil {
+	var multi io.Writer
+
+	if err != nil {
 		log.Println("Uh oh! Could not open log file.")
-		log.Printf("Ensure there is a file at %q", *logPath)
+		log.Printf("Ensure there is a file at %q\n", *logPath)
+		log.Println("Skeeping log file output altogether.")
+		multi = io.MultiWriter(os.Stdout)
+	} else {
+		multi = io.MultiWriter(logFile, os.Stdout)
 	}
 
 	Info = log.New(multi,
@@ -65,11 +69,13 @@ func createLogger() {
 	Error = log.New(multi,
 		"ERROR: ",
 		log.Ldate|log.Ltime|log.Lshortfile)
+
+	return logFile
 }
 
 func main() {
 
-	createLogger()
+	logFile := createLogger()
 	defer logFile.Close()
 
 	c, err := NewConsumer(*uri, *exchange, *exchangeType, *queue, *bindingKey, *consumerTag)
