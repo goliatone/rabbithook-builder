@@ -6,6 +6,8 @@ GOGET=$(GO) get
 GOCLEAN=$(GO) clean
 GOINSTALL=$(GO) install
 GOBUILD=$(GO) build -o
+
+#TODO: include version information in the build
 BFLAGS=-ldflags "-w" $(SRCPATH)main.go
 EXNAME=rhbuilder
 
@@ -20,9 +22,8 @@ myname:
 makedir:
 	@echo "start building tree..."
 	@if [ ! -d $(BUILDPATH)/bin ] ; then mkdir -p $(BUILDPATH)/bin ; fi
-	@if [ ! -d $(BUILDPATH)/pkg ] ; then mkdir -p $(BUILDPATH)/pkg ; fi
 
-get:
+goget:
 	@$(GOGET) github.com/streadway/amqp
 
 build:
@@ -30,10 +31,13 @@ build:
 	$(GOBUILD) $(BINPATH)$(EXNAME) $(BFLAGS)
 	@echo "Yay! all DONE!"
 
+remote:
+	# ssh root@wee-1.local /bin/bash -e "cd /root/CODE/rabbithook-builder && make ARCH=arm all"
+	@scp root@wee-1.local:/root/CODE/rabbithook-builder/rhbuilder $(BUILDPATH)/bin/arm/
+
 clean:
 	@echo "cleanning"
 	@rm -rf $(BUILDPATH)/bin/$(EXENAME)
-	@rm -rf $(BUILDPATH)/pkg
 	@rm -rf $(BUILDPATH)/src/github.com
 
-all: makedir get build
+all: makedir goget build
