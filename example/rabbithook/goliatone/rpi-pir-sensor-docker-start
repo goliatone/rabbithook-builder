@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo "run docker, run..."
+docker run --name=rpi-pir-sensor -p 3000:3000 --restart=always -d goliatone/rpi-pir-sensor:latest
