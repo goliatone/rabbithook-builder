@@ -32,8 +32,8 @@ build:
 	@echo "Yay! all DONE!"
 
 remote:
-	# ssh root@wee-1.local /bin/bash -e "cd /root/CODE/rabbithook-builder && make ARCH=arm all"
-	@scp root@wee-1.local:/root/CODE/rabbithook-builder/rhbuilder $(BUILDPATH)/bin/arm/
+	# ssh root@wee-1.local "cd /root/CODE/rabbithook-builder/src; make ARCH=arm all"
+	@scp root@wee-1.local:/root/CODE/rabbithook-builder/bin/arm/rhbuilder $(BUILDPATH)/bin/arm/
 
 clean:
 	@echo "cleanning"
