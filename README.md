@@ -38,7 +38,7 @@ Sample Event Payload:
         "tag": "latest",
         "pusher": "goliatone"
     },
-    "callback_url": "https://registry.hub.docker.com/u/goliatone/hello-rabbit/hook/2fic5405ga2f345ajeja31ac234ie0igb/",
+    "callback_url": "https://registry.hub.docker.com/u/goliatone/hello-rabbit/hook/4hac5445ga3f345ajeje31abc34ie06rip/",
     "repository": {
         "status": "Active",
         "description": "Hello rabbit!",
