@@ -32,10 +32,14 @@ This repository also provides a set of scripts to run `rhbuilder` using `init.d`
 
 For more information on how to use the boot scripts, refer to the readme file for the [init.d][initd] or [upstart][upstart]
 
-[initd]:https://github.com/goliatone/rabbithook-builder/blob/master/conf/init.d/README.md
-[upstart]:https://github.com/goliatone/rabbithook-builder/blob/master/conf/ubuntu/README.md
+## Example
 
-## Topic and sample payload
+### Build script
+There is a [sample build script][sample] written in `bash`. This script is
+
+
+
+### Topic and sample payload
 
 - topic:
     - `rabbithook.dockerhub`
@@ -89,3 +93,6 @@ curl -sL https://raw.githubusercontent.com/goliatone/rabbithook-builder/master/c
 [gw]:https://developer.github.com/webhooks/
 [dw]:https://docs.docker.com/docker-hub/webhooks/
 [hr]:https://hub.docker.com/r/goliatone/hello-rabbit/
+[sample]:https://github.com/goliatone/rabbithook-builder/blob/master/example/rabbithook/goliatone/rpi-pir-sensor
+[initd]:https://github.com/goliatone/rabbithook-builder/blob/master/conf/init.d/README.md
+[upstart]:https://github.com/goliatone/rabbithook-builder/blob/master/conf/ubuntu/README.md
