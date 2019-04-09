@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # call with platform: sudo ./install arm|ubuntu|mac
 ARCH=${1:-arm}
@@ -12,19 +13,19 @@ fi
 mkdir -p /usr/local/opt/rhbuilder
 
 cd /usr/local/bin/
-wget -N $BASE_URL/bin/$ARCH/rhbuilder
+wget -N "$BASE_URL/bin/$ARCH/rhbuilder"
 chmod 755 /usr/local/bin/rhbuilder
 
 echo "cd into init.d"
-cd /etc/init.d
+cd "/etc/init.d"
 echo "Downloading rhbuilder init.d job"
-wget -N $BASE_URL/conf/init.d/rhbuilder
+wget -N "$BASE_URL/conf/init.d/rhbuilder"
 
 echo "Set permissions for rhbuilder"
 chmod 755 /etc/init.d/rhbuilder
 
 echo "Copy logrotate config file"
-wget -N $BASE_URL/conf/init.d/rhbuilder.conf -O /etc/logrotate.d/rhbuilder
+wget -N "$BASE_URL/conf/init.d/rhbuilder.conf" -O /etc/logrotate.d/rhbuilder
 
 echo "Registering service with update-rc.d"
 sudo update-rc.d rhbuilder defaults
